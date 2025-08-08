@@ -32,9 +32,10 @@ from components.forms import create_single_prediction_form, create_batch_predict
 from components.charts import create_prediction_gauge
 from utils.helpers import format_time, validate_input_data, export_results_to_csv
 import pandas as pd
-from config.settings import APP_CONFIG
 
 def main():
+    from config.settings import APP_CONFIG
+    
     st.set_page_config(
         page_title=APP_CONFIG["title"],
         page_icon=APP_CONFIG["icon"],
