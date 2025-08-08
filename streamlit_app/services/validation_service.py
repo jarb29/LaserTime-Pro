@@ -106,7 +106,7 @@ class ValidationService:
             cutting_params = self.get_cutting_parameters(espesor)
 
             # Calculate physics-based estimate (convert to minutes)
-            estimated_time = (cutting_length / cutting_speed) if cutting_speed > 0 else 0
+            estimated_time = (cutting_length / cutting_speed + cutting_length/100) if cutting_speed > 0 else 0
 
             if not enable_validation:
                 return {
@@ -120,11 +120,10 @@ class ValidationService:
                 }
 
             # Apply validation logic from PyCaret code
-            adjustment = (cutting_length / 25)  # 60 minutes per 100 meters
-            base_time = ml_prediction + adjustment
+            base_time = ml_prediction + (cutting_length / 100)*60
 
             if estimated_time > 0:
-                final_time = max(base_time, estimated_time) + adjustment
+                final_time = max(base_time, estimated_time)
             else:
                 final_time = base_time
 
