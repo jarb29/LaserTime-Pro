@@ -39,45 +39,45 @@ CUT_VALUES = {
 
 class ValidationService:
     """Service for validating ML predictions with cutting speed parameters"""
-    
+
     def get_cutting_speed(self, thickness: float) -> float:
         """Get cutting speed with interpolation for unknown thicknesses"""
         thickness = int(thickness)
-        
+
         # Direct match
         if thickness in CUT_VALUES:
             return CUT_VALUES[thickness]['VC Est (mt/min)']
-        
+
         # Find closest values for interpolation
         thicknesses = sorted(CUT_VALUES.keys())
         lower_thickness = None
         higher_thickness = None
-        
+
         for t in thicknesses:
             if t < thickness:
                 lower_thickness = t
             elif t > thickness:
                 higher_thickness = t
                 break
-        
+
         # Handle edge cases
         if lower_thickness is None:
             return CUT_VALUES[higher_thickness]['VC Est (mt/min)'] if higher_thickness else 0
         if higher_thickness is None:
             return CUT_VALUES[lower_thickness]['VC Est (mt/min)']
-        
+
         # Interpolate
         lower_speed = CUT_VALUES[lower_thickness]['VC Est (mt/min)']
         higher_speed = CUT_VALUES[higher_thickness]['VC Est (mt/min)']
         return (lower_speed + higher_speed) / 2
-    
+
     def get_cutting_parameters(self, thickness: float) -> Dict[str, Any]:
         """Get all cutting parameters for a thickness"""
         thickness = int(thickness)
-        
+
         if thickness in CUT_VALUES:
             return CUT_VALUES[thickness].copy()
-        
+
         # For interpolated values, return closest match parameters
         thicknesses = sorted(CUT_VALUES.keys())
         closest = min(thicknesses, key=lambda x: abs(x - thickness))
@@ -85,18 +85,18 @@ class ValidationService:
         params['VC Est (mt/min)'] = self.get_cutting_speed(thickness)
         params['interpolated'] = True
         return params
-    
-    def validate_prediction(self, espesor: float, cutting_length: float, 
+
+    def validate_prediction(self, espesor: float, cutting_length: float,
                           ml_prediction: float, enable_validation: bool = True) -> Dict[str, Any]:
         """
         Validate ML prediction against cutting speed calculations
-        
+
         Args:
             espesor: Material thickness in mm
             cutting_length: Cutting length in meters
             ml_prediction: ML model prediction in minutes
             enable_validation: Whether to apply validation
-            
+
         Returns:
             Dictionary with validation results
         """
@@ -104,10 +104,10 @@ class ValidationService:
             # Get cutting parameters
             cutting_speed = self.get_cutting_speed(espesor)
             cutting_params = self.get_cutting_parameters(espesor)
-            
+
             # Calculate physics-based estimate (convert to minutes)
             estimated_time = (cutting_length / cutting_speed) if cutting_speed > 0 else 0
-            
+
             if not enable_validation:
                 return {
                     'ml_prediction': ml_prediction,
@@ -118,18 +118,18 @@ class ValidationService:
                     'validation_enabled': False,
                     'status': 'ML Only'
                 }
-            
+
             # Apply validation logic from PyCaret code
             adjustment = (cutting_length / 25)  # 60 minutes per 100 meters
-            base_time = ml_prediction
-            
+            base_time = ml_prediction + adjustment
+
             if estimated_time > 0:
                 final_time = max(base_time, estimated_time) + adjustment
             else:
                 final_time = base_time
-            
+
             validated_result = math.ceil(final_time)
-            
+
             return {
                 'ml_prediction': ml_prediction,
                 'speed_estimate': estimated_time,
@@ -140,7 +140,7 @@ class ValidationService:
                 'validation_enabled': True,
                 'status': 'Validated' if cutting_speed > 0 else 'ML Only'
             }
-            
+
         except Exception as e:
             return {
                 'ml_prediction': ml_prediction,
