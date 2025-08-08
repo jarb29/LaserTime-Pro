@@ -253,6 +253,19 @@ def show_single_prediction():
                             """, unsafe_allow_html=True)
                         
                         with col2b:
+                            # Format time display based on duration
+                            total_minutes = result['predicted_time_minutes']
+                            if total_minutes >= 60:
+                                hours = int(total_minutes // 60)
+                                remaining_minutes = int(total_minutes % 60)
+                                time_display = f"{hours}h {remaining_minutes}m"
+                                time_unit = "hours"
+                                time_value = f"{total_minutes/60:.1f}"
+                            else:
+                                time_display = f"{total_minutes:.1f} min"
+                                time_unit = "minutes"
+                                time_value = f"{total_minutes:.1f}"
+                            
                             # Simple progress indicator instead of complex gauge
                             st.markdown(f"""
                             <div style="
@@ -264,8 +277,8 @@ def show_single_prediction():
                                 border: 1px solid #dee2e6;
                             ">
                                 <div style="font-size: 0.875rem; color: #6c757d; margin-bottom: 1rem;">Processing Time Breakdown</div>
-                                <div style="font-size: 2.5rem; font-weight: 700; color: #28a745; margin-bottom: 0.5rem;">{result['predicted_time_minutes']:.1f}</div>
-                                <div style="font-size: 1rem; color: #6c757d; margin-bottom: 1rem;">minutes</div>
+                                <div style="font-size: 2.5rem; font-weight: 700; color: #28a745; margin-bottom: 0.5rem;">{time_value}</div>
+                                <div style="font-size: 1rem; color: #6c757d; margin-bottom: 1rem;">{time_unit}</div>
                                 <div style="
                                     background: #e9ecef;
                                     height: 8px;
@@ -276,11 +289,11 @@ def show_single_prediction():
                                     <div style="
                                         background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
                                         height: 100%;
-                                        width: {min(100, (result['predicted_time_minutes']/60)*100):.0f}%;
+                                        width: {min(100, (total_minutes/60)*100):.0f}%;
                                         border-radius: 4px;
                                     "></div>
                                 </div>
-                                <div style="font-size: 0.75rem; color: #6c757d;">Estimated completion time</div>
+                                <div style="font-size: 0.75rem; color: #6c757d;">Estimated completion time: {time_display}</div>
                             </div>
                             """, unsafe_allow_html=True)
                         
