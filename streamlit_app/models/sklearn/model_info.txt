@@ -1,0 +1,9 @@
+Sample Machining Time Model
+==========================
+Model: RandomForestRegressor
+Features: 5
+Training samples: 800
+Test samples: 200
+Training R²: 0.998
+Test R²: 0.988
+Feature columns: ['Espesor', 'Longitude Corte (m)', 'Cutting_Length_Squared', 'Espesor_Squared', 'Length_Thickness_Interaction']

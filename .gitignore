@@ -1,0 +1,105 @@
+# Data files - DO NOT COMMIT
+data/
+*.csv
+*.xlsx
+*.xls
+*.json
+*.parquet
+*.pickle
+*.pkl
+
+# Logs and temporary files
+logs/
+*.log
+*.tmp
+*.temp
+
+# Model files - Include for Streamlit app deployment
+# notebooks/analysis/saved_models/
+# streamlit_app/models/
+# *.onnx
+
+# Environment and configuration
+.env
+.env.local
+.env.production
+config.ini
+secrets.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+.env/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# AWS credentials
+.aws/
+credentials
+config
+
+# Streamlit
+.streamlit/
+
+# Cache
+.cache/
+*.cache
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Large files
+*.zip
+*.tar.gz
+*.rar
+*.7z

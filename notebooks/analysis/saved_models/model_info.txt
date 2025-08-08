@@ -1,0 +1,10 @@
+Machining Time Prediction Model
+================================
+Created: 2025-08-07 20:41:10
+Best Model: Random Forest
+Test R²: 0.9784
+Test MAE: 456.77 seconds
+Test RMSE: 933.56 seconds
+Training samples: 480
+Test samples: 120
+Feature columns: ['Espesor', 'Longitude Corte (m)', 'Cutting_Length_Squared', 'Espesor_Squared', 'Length_Thickness_Interaction']
