@@ -13,8 +13,12 @@ import streamlit as st
 class SklearnModelService:
     def __init__(self, model_dir=None):
         if model_dir is None:
-            from config.settings import SKLEARN_MODELS_DIR
-            self.model_dir = SKLEARN_MODELS_DIR
+            try:
+                from config.settings import SKLEARN_MODELS_DIR
+                self.model_dir = SKLEARN_MODELS_DIR
+            except ImportError:
+                # Fallback to relative path
+                self.model_dir = Path(__file__).parent.parent.parent / "notebooks" / "analysis" / "saved_models"
         else:
             self.model_dir = Path(model_dir)
         self.model = None

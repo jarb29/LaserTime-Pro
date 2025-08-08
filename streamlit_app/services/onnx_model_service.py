@@ -21,8 +21,15 @@ class ONNXModelService:
         if not ONNX_AVAILABLE:
             raise ImportError("ONNX runtime not available")
         
-        from config.settings import ONNX_MODELS_DIR
-        self.model_dir = Path(model_dir) if model_dir else ONNX_MODELS_DIR
+        if model_dir:
+            self.model_dir = Path(model_dir)
+        else:
+            try:
+                from config.settings import ONNX_MODELS_DIR
+                self.model_dir = ONNX_MODELS_DIR
+            except ImportError:
+                # Fallback to relative path
+                self.model_dir = Path(__file__).parent.parent.parent / "notebooks" / "analysis" / "saved_models"
         self.session = None
         self.scaler_session = None
         self.metadata = None
@@ -31,7 +38,11 @@ class ONNXModelService:
     def _load_models(self):
         """Load ONNX models with Streamlit caching"""
         try:
-            from config.settings import ONNX_CONFIG
+            try:
+                from config.settings import ONNX_CONFIG
+            except ImportError:
+                # Fallback ONNX config
+                ONNX_CONFIG = {"providers": ["CPUExecutionProvider"]}
             
             # Load model
             model_path = self.model_dir / "machining_time_model.onnx"

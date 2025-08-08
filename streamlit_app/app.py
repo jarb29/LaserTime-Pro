@@ -34,7 +34,17 @@ from utils.helpers import format_time, validate_input_data, export_results_to_cs
 import pandas as pd
 
 def main():
-    from config.settings import APP_CONFIG
+    # Robust config import with fallback
+    try:
+        from config.settings import APP_CONFIG
+    except ImportError:
+        # Fallback config if import fails
+        APP_CONFIG = {
+            "title": "LaserTime Pro",
+            "icon": "⚡",
+            "layout": "wide",
+            "theme": "light"
+        }
     
     st.set_page_config(
         page_title=APP_CONFIG["title"],
