@@ -16,13 +16,12 @@ try:
 except ImportError:
     ONNX_AVAILABLE = False
 
-from config.settings import ONNX_MODELS_DIR, ONNX_CONFIG
-
 class ONNXModelService:
     def __init__(self, model_dir=None):
         if not ONNX_AVAILABLE:
             raise ImportError("ONNX runtime not available")
         
+        from config.settings import ONNX_MODELS_DIR
         self.model_dir = Path(model_dir) if model_dir else ONNX_MODELS_DIR
         self.session = None
         self.scaler_session = None
@@ -32,6 +31,8 @@ class ONNXModelService:
     def _load_models(self):
         """Load ONNX models with Streamlit caching"""
         try:
+            from config.settings import ONNX_CONFIG
+            
             # Load model
             model_path = self.model_dir / "machining_time_model.onnx"
             if model_path.exists():

@@ -10,11 +10,10 @@ import joblib
 from pathlib import Path
 import streamlit as st
 
-from config.settings import SKLEARN_MODELS_DIR
-
 class SklearnModelService:
     def __init__(self, model_dir=None):
         if model_dir is None:
+            from config.settings import SKLEARN_MODELS_DIR
             self.model_dir = SKLEARN_MODELS_DIR
         else:
             self.model_dir = Path(model_dir)
