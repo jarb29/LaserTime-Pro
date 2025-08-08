@@ -8,10 +8,22 @@ Main entry point for the Streamlit application.
 import streamlit as st
 from pathlib import Path
 import sys
+import os
 
-# Add project root to path
+# Add project root to path for Streamlit Cloud compatibility
 project_root = Path(__file__).parent
-sys.path.append(str(project_root))
+app_root = project_root
+repo_root = project_root.parent
+
+# Add all necessary paths
+sys.path.insert(0, str(app_root))
+sys.path.insert(0, str(repo_root))
+
+# Ensure config can be found
+if str(app_root) not in sys.path:
+    sys.path.append(str(app_root))
+if str(repo_root) not in sys.path:
+    sys.path.append(str(repo_root))
 
 from services.onnx_model_service import ONNXModelService
 from services.sklearn_model_service import SklearnModelService
