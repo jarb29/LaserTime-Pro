@@ -25,12 +25,33 @@ if str(app_root) not in sys.path:
 if str(repo_root) not in sys.path:
     sys.path.append(str(repo_root))
 
-from services.onnx_model_service import ONNXModelService
-from services.sklearn_model_service import SklearnModelService
-from components.sidebar import create_sidebar
-from components.forms import create_single_prediction_form, create_batch_prediction_form
-from components.charts import create_prediction_gauge
-from utils.helpers import format_time, validate_input_data, export_results_to_csv
+# Robust imports with fallbacks
+try:
+    from services.onnx_model_service import ONNXModelService
+except ImportError:
+    ONNXModelService = None
+
+try:
+    from services.sklearn_model_service import SklearnModelService
+except ImportError:
+    SklearnModelService = None
+
+try:
+    from components.sidebar import create_sidebar
+except ImportError:
+    def create_sidebar():
+        return "Dashboard"
+
+try:
+    from utils.helpers import format_time, validate_input_data, export_results_to_csv
+except ImportError:
+    def format_time(seconds):
+        return f"{seconds:.1f}s"
+    def validate_input_data(espesor, cutting_length):
+        return []
+    def export_results_to_csv(df):
+        return df.to_csv(index=False)
+
 import pandas as pd
 
 def main():
@@ -450,13 +471,19 @@ def get_model_service():
     """Get cached model service"""
     try:
         # Try ONNX first
-        return ONNXModelService(), "ONNX"
+        if ONNXModelService:
+            return ONNXModelService(), "ONNX"
     except Exception as e:
-        try:
-            # Fallback to sklearn
+        pass
+    
+    try:
+        # Fallback to sklearn
+        if SklearnModelService:
             return SklearnModelService(), "sklearn"
-        except Exception as e2:
-            raise Exception(f"Failed to load any models: {e2}")
+    except Exception as e2:
+        pass
+    
+    raise Exception("Failed to load any models - check model files and dependencies")
 
 def initialize_services():
     """Initialize model services with proper caching"""
