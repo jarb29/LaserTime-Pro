@@ -120,7 +120,8 @@ class ValidationService:
                 }
 
             # Apply validation logic from PyCaret code
-            base_time = ml_prediction + (cutting_length / 100)*60
+            adjustment = (cutting_length / 100) * 60
+            base_time = ml_prediction + adjustment
 
             if estimated_time > 0:
                 final_time = max(base_time, estimated_time)
