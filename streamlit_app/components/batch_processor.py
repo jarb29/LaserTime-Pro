@@ -403,7 +403,7 @@ def _show_column_mapping():
                 ),
                 coloraxis_colorbar=dict(
                     title='Tiempo de Procesamiento (min)',
-                    titlefont=dict(color='#334155'),
+                    title_font=dict(color='#334155'),
                     tickfont=dict(color='#475569')
                 ),
                 margin=dict(l=100, r=100, t=80, b=60)
