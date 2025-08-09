@@ -194,9 +194,14 @@ def _show_file_processing():
     
     if 'excel_file' not in st.session_state:
         if uploaded_file.name.endswith('.xlsx') or uploaded_file.name.endswith('.xlsm'):
-            st.session_state.excel_file = pd.ExcelFile(uploaded_file)
-            st.session_state.sheet_names = st.session_state.excel_file.sheet_names
-            st.session_state.selected_sheet = st.session_state.sheet_names[0]
+            try:
+                st.session_state.excel_file = pd.ExcelFile(uploaded_file)
+                st.session_state.sheet_names = st.session_state.excel_file.sheet_names
+                st.session_state.selected_sheet = st.session_state.sheet_names[0]
+            except ImportError:
+                st.error("❌ Error: openpyxl no está instalado. Por favor instala openpyxl para procesar archivos Excel.")
+                st.info("💡 Sugerencia: Usa archivos CSV como alternativa.")
+                return
         else:
             st.session_state.excel_file = None
             st.session_state.initial_data = pd.read_csv(uploaded_file)
@@ -591,27 +596,39 @@ def _show_column_mapping():
         edited_data = st.data_editor(st.session_state.results_df, use_container_width=True, hide_index=True, num_rows="dynamic", key="results_editor")
         
         # Show download button when results are available
-        excel_buffer = io.BytesIO()
-        with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
-            # Create a copy for export with properly formatted datetime columns
-            export_df = st.session_state.results_df.copy()
+        try:
+            excel_buffer = io.BytesIO()
+            with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
+                # Create a copy for export with properly formatted datetime columns
+                export_df = st.session_state.results_df.copy()
+                
+                # Format datetime columns for Excel export
+                if 'Start' in export_df.columns:
+                    export_df['Start'] = export_df['Start'].dt.strftime('%Y-%m-%d %H:%M:%S')
+                if 'End' in export_df.columns:
+                    export_df['End'] = export_df['End'].dt.strftime('%Y-%m-%d %H:%M:%S')
+                
+                export_df.to_excel(writer, sheet_name='Predictions', index=False)
+            excel_data = excel_buffer.getvalue()
             
-            # Format datetime columns for Excel export
-            if 'Start' in export_df.columns:
-                export_df['Start'] = export_df['Start'].dt.strftime('%Y-%m-%d %H:%M:%S')
-            if 'End' in export_df.columns:
-                export_df['End'] = export_df['End'].dt.strftime('%Y-%m-%d %H:%M:%S')
-            
-            export_df.to_excel(writer, sheet_name='Predictions', index=False)
-        excel_data = excel_buffer.getvalue()
-        
-        st.download_button(
-            label="📈 Descargar Resultados como Excel",
-            data=excel_data,
-            file_name="batch_predictions.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            use_container_width=True
-        )
+            st.download_button(
+                label="📈 Descargar Resultados como Excel",
+                data=excel_data,
+                file_name="batch_predictions.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                use_container_width=True
+            )
+        except ImportError:
+            # Fallback to CSV download if openpyxl is not available
+            csv_data = st.session_state.results_df.to_csv(index=False)
+            st.download_button(
+                label="📥 Descargar Resultados como CSV",
+                data=csv_data,
+                file_name="batch_predictions.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
+            st.info("💡 Descarga disponible en formato CSV (openpyxl no disponible para Excel).")
     else:
         edited_data = st.data_editor(data, use_container_width=True, hide_index=True, num_rows="dynamic", key="data_editor")
     
