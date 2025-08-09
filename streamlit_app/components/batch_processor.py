@@ -21,13 +21,13 @@ def _clean_data(data):
     cols_to_remove = [col for col in data.columns if data[col].isnull().sum() > 2]
     if cols_to_remove:
         data = data.drop(columns=cols_to_remove)
-        cleaning_log.append(f"🗑️ Removed {len(cols_to_remove)} columns with >2 NaN values")
+        cleaning_log.append(f"🗑️ Eliminadas {len(cols_to_remove)} columnas con >2 valores NaN")
     
     before_rows = len(data)
     data = data.dropna(axis=0, how='all')
     removed_rows = before_rows - len(data)
     if removed_rows > 0:
-        cleaning_log.append(f"🗑️ Removed {removed_rows} completely empty rows")
+        cleaning_log.append(f"🗑️ Eliminadas {removed_rows} filas completamente vacías")
     
     return data.reset_index(drop=True), cleaning_log
 
@@ -63,7 +63,7 @@ def _apply_headers(data, header_row):
         return clean_data
         
     except Exception as e:
-        st.error(f"❌ Header application failed: {e}")
+        st.error(f"❌ Error al aplicar encabezados: {e}")
         return None
 
 
@@ -129,7 +129,7 @@ def _process_batch_data(data_df, original_data):
     try:
         required_cols = ['Espesor', 'Longitud de corte (m)']
         if not all(col in data_df.columns for col in required_cols):
-            st.error(f"❌ Missing columns: {required_cols}")
+            st.error(f"❌ Columnas faltantes: {required_cols}")
             return None
         
         # Clean data for model
@@ -137,10 +137,10 @@ def _process_batch_data(data_df, original_data):
         
         # Check if model service is available
         if 'model_service' not in st.session_state:
-            st.error("System not ready. Please check model status.")
+            st.error("Sistema no listo. Por favor verifique el estado del modelo.")
             return None
         
-        with st.spinner(f"🔄 Processing {len(model_data)} jobs..."):
+        with st.spinner(f"🔄 Procesando {len(model_data)} trabajos..."):
             predictions = []
             for index, row in model_data.iterrows():
                 espesor = row['Espesor']
@@ -161,11 +161,11 @@ def _process_batch_data(data_df, original_data):
             # Add Plan column
             result_df = _add_plan_column(result_df)
             
-            st.success(f"🎉 Completed processing {len(result_df)} rows!")
+            st.success(f"🎉 ¡Procesamiento completado de {len(result_df)} filas!")
             return result_df
             
     except Exception as e:
-        st.error(f"❌ Processing failed: {e}")
+        st.error(f"❌ Error en el procesamiento: {e}")
         return None
 
 
@@ -179,10 +179,10 @@ def _show_placeholder():
         text-align: center;
         border: 1px solid #dee2e6;
     '>
-        <div style='font-size: 1.2rem; color: #6c757d; margin-bottom: 1rem;'>🎯 Ready to Process</div>
+        <div style='font-size: 1.2rem; color: #6c757d; margin-bottom: 1rem;'>🎯 Listo para Procesar</div>
         <div style='font-size: 0.9rem; color: #6c757d;'>
-            Upload a file or enter data manually,<br>
-            then click <strong>Process Batch</strong>
+            Sube un archivo o ingresa datos manualmente,<br>
+            luego haz clic en <strong>Procesar Lote</strong>
         </div>
         <div style='margin-top: 1rem; font-size: 2rem; opacity: 0.3;'>🚀</div>
     </div>
@@ -203,7 +203,7 @@ def _show_file_processing():
 
     if st.session_state.excel_file:
         selected_sheet = st.selectbox(
-            "📋 Select Sheet:", 
+            "📋 Seleccionar Hoja:", 
             st.session_state.sheet_names,
             index=st.session_state.sheet_names.index(st.session_state.selected_sheet),
             key="sheet_selector"
@@ -225,7 +225,7 @@ def _show_file_processing():
             st.session_state.processing_step = 'column_mapping'
             st.rerun()
         else:
-            st.error("❌ Could not process file. Please check the data format.")
+            st.error("❌ No se pudo procesar el archivo. Por favor verifica el formato de datos.")
 
 
 def _show_column_mapping():
@@ -235,8 +235,8 @@ def _show_column_mapping():
         data['Longitud de corte (m)'] = 10.0
     
     espesor_col = st.selectbox(
-        "📊 Select the 'Espesor' column:",
-        ["-- Select --"] + list(data.columns),
+        "📊 Selecciona la columna 'Espesor':",
+        ["-- Seleccionar --"] + list(data.columns),
         key="espesor_col"
     )
     
@@ -254,29 +254,29 @@ def _show_column_mapping():
         
         with col1:
             st.metric(
-                label="📊 Total Jobs",
+                label="📊 Total Trabajos",
                 value=f"{total_jobs:,}"
             )
         
         with col2:
             st.metric(
-                label="⏱️ Total Time",
-                value=f"{total_time_hours:.1f} hours",
-                delta=f"{total_time_minutes:.0f} minutes"
+                label="⏱️ Tiempo Total",
+                value=f"{total_time_hours:.1f} horas",
+                delta=f"{total_time_minutes:.0f} minutos"
             )
         
         with col3:
             st.metric(
-                label="📅 Completion Date",
+                label="📅 Fecha de Finalización",
                 value=completion_date.strftime("%Y-%m-%d %H:%M")
             )
         
         # Add visualization tabs
         st.markdown("---")
-        tab1, tab2, tab3, tab4 = st.tabs(["📊 CNC Analysis", "🎨 Modern Timeline", "☀️ Sunburst Analysis", "🌊 Sankey Flow"])
+        tab1, tab2, tab3, tab4 = st.tabs(["📊 Análisis CNC", "🎨 Cronograma Moderno", "☀️ Análisis Sunburst", "🌊 Flujo Sankey"])
         
         with tab1:
-            st.markdown("**🔧 CNC Processing Time Analysis**")
+            st.markdown("**🔧 Análisis de Tiempo de Procesamiento CNC**")
             
             # Create professional seaborn plot
             plt.style.use('default')
@@ -293,14 +293,16 @@ def _show_column_mapping():
                 data=plot_data, 
                 x='CNC:', 
                 y='TiempoP',
+                hue='CNC:',
                 ax=ax,
-                palette='viridis'
+                palette='viridis',
+                legend=False
             )
             
             # Customize the plot
-            ax.set_title('CNC Processing Time Distribution', fontsize=16, fontweight='bold', pad=20)
-            ax.set_xlabel('CNC Code', fontsize=12, fontweight='bold')
-            ax.set_ylabel('Processing Time (minutes)', fontsize=12, fontweight='bold')
+            ax.set_title('Distribución de Tiempo de Procesamiento CNC', fontsize=16, fontweight='bold', pad=20)
+            ax.set_xlabel('Código CNC', fontsize=12, fontweight='bold')
+            ax.set_ylabel('Tiempo de Procesamiento (minutos)', fontsize=12, fontweight='bold')
             
             # Rotate x-axis labels
             plt.xticks(rotation=45, ha='right')
@@ -321,7 +323,7 @@ def _show_column_mapping():
             plt.close()
         
         with tab2:
-            st.markdown("**🎨 Modern Production Timeline**")
+            st.markdown("**🎨 Cronograma de Producción Moderno**")
             
             # Create modern timeline with enhanced visual design
             timeline_df = result_df.copy().sort_values('Start').reset_index(drop=True)
@@ -337,8 +339,8 @@ def _show_column_mapping():
                 x_end='End',
                 y='Job_ID',
                 color='TiempoP',
-                title='Modern Production Timeline - Glass Morphism Style',
-                labels={'Job_ID': 'Production Jobs', 'TiempoP': 'Processing Time (min)'},
+                title='Cronograma de Producción Moderno - Estilo Glass Morphism',
+                labels={'Job_ID': 'Trabajos de Producción', 'TiempoP': 'Tiempo de Procesamiento (min)'},
                 hover_data={'CNC:': True, 'Duration_Hours': ':.1f', 'Start_Display': True, 'End_Display': True},
                 color_continuous_scale='Viridis'
             )
@@ -346,11 +348,11 @@ def _show_column_mapping():
             # Update hover template to show date and day
             fig_modern.update_traces(
                 hovertemplate='<b>%{y}</b><br>' +
-                             'Start: %{customdata[2]}<br>' +
-                             'End: %{customdata[3]}<br>' +
+                             'Inicio: %{customdata[2]}<br>' +
+                             'Fin: %{customdata[3]}<br>' +
                              'CNC: %{customdata[0]}<br>' +
-                             'Duration: %{customdata[1]:.1f} hours<br>' +
-                             'Processing Time: %{marker.color:.0f} min<br>' +
+                             'Duración: %{customdata[1]:.1f} horas<br>' +
+                             'Tiempo de Procesamiento: %{marker.color:.0f} min<br>' +
                              '<extra></extra>'
             )
             
@@ -359,14 +361,14 @@ def _show_column_mapping():
                 height=max(600, len(timeline_df) * 50),
                 font=dict(family='Inter, system-ui, sans-serif', size=12),
                 title=dict(
-                    text='Modern Production Timeline',
+                    text='Cronograma de Producción Moderno',
                     x=0.5,
                     font=dict(size=20, family='Inter, system-ui, sans-serif', color='#1f2937')
                 ),
                 plot_bgcolor='rgba(248, 250, 252, 0.8)',
                 paper_bgcolor='rgba(255, 255, 255, 0.95)',
                 xaxis=dict(
-                    title='Timeline',
+                    title='Cronograma',
                     tickformat='%Y-%m-%d',
                     tickangle=0,
                     showgrid=True,
@@ -376,7 +378,7 @@ def _show_column_mapping():
                     title_font=dict(color='#334155', size=13)
                 ),
                 yaxis=dict(
-                    title='Jobs',
+                    title='Trabajos',
                     autorange='reversed',
                     showgrid=True,
                     gridwidth=1,
@@ -385,7 +387,7 @@ def _show_column_mapping():
                     title_font=dict(color='#334155', size=13)
                 ),
                 coloraxis_colorbar=dict(
-                    title='Processing Time (min)',
+                    title='Tiempo de Procesamiento (min)',
                     titlefont=dict(color='#334155'),
                     tickfont=dict(color='#475569')
                 ),
@@ -405,7 +407,7 @@ def _show_column_mapping():
             st.plotly_chart(fig_modern, use_container_width=True)
         
         with tab3:
-            st.markdown("**☀️ Hierarchical Production Analysis**")
+            st.markdown("**☀️ Análisis Jerárquico de Producción**")
             
             # Check available columns and create sunburst
             sunburst_cols = ['Cliente', 'PV', 'Esp.', 'CNC:']
@@ -422,7 +424,7 @@ def _show_column_mapping():
                     sunburst_data,
                     path=available_sunburst_cols,
                     values='TiempoP',
-                    title='Production Hierarchy: Client → Project → Thickness → CNC',
+                    title='Jerarquía de Producción: Cliente → Proyecto → Espesor → CNC',
                     color='TiempoP',
                     color_continuous_scale=[[0, '#8B4513'], [0.3, '#CD853F'], [0.6, '#DEB887'], [1, '#D2691E']]
                 )
@@ -434,10 +436,10 @@ def _show_column_mapping():
                 
                 st.plotly_chart(fig_sunburst, use_container_width=True)
             else:
-                st.warning(f"Sunburst requires columns: {sunburst_cols}. Available: {available_sunburst_cols}")
+                st.warning(f"Sunburst requiere columnas: {sunburst_cols}. Disponibles: {available_sunburst_cols}")
         
         with tab4:
-            st.markdown("**🌊 Production Flow Analysis**")
+            st.markdown("**🌊 Análisis de Flujo de Producción**")
             
             # Check available columns for Sankey
             sankey_required_cols = ['Cliente', 'OF', 'PV', 'Esp.', 'Longitud de corte (m)', 'CNC:', 'TiempoP']
@@ -458,11 +460,11 @@ def _show_column_mapping():
                 cncs = sorted(sankey_data['CNC:'].unique().tolist())
                 
                 # Create clean node labels with prefixes for clarity
-                client_labels = [f"Client: {c}" for c in clients]
+                client_labels = [f"Cliente: {c}" for c in clients]
                 of_labels = [f"OF: {o}" for o in ofs]
-                project_labels = [f"Project: {p}" for p in projects]
+                project_labels = [f"Proyecto: {p}" for p in projects]
                 espesor_labels = [f"Esp: {e}mm" for e in espesors]
-                longitud_labels = [f"Length: {l}m" for l in longitudes]
+                longitud_labels = [f"Longitud: {l}m" for l in longitudes]
                 cnc_labels = [f"CNC: {c}" for c in cncs]
                 
                 # Create node labels and indices
@@ -543,20 +545,20 @@ def _show_column_mapping():
                         line=dict(color='white', width=3),
                         label=all_nodes,
                         color=node_colors,
-                        hovertemplate='%{label}<br>Total Time: %{value:.1f} min<extra></extra>'
+                        hovertemplate='%{label}<br>Tiempo Total: %{value:.1f} min<extra></extra>'
                     ),
                     link=dict(
                         source=sources,
                         target=targets,
                         value=values,
                         color=link_colors,
-                        hovertemplate='Flow: %{value:.1f} min<extra></extra>'
+                        hovertemplate='Flujo: %{value:.1f} min<extra></extra>'
                     )
                 )])
                 
                 fig_sankey.update_layout(
                     title=dict(
-                        text='Production Flow: Client → Work Order → Project → Thickness → Length → CNC Machine',
+                        text='Flujo de Producción: Cliente → Orden de Trabajo → Proyecto → Espesor → Longitud → Máquina CNC',
                         font=dict(size=16, color='#2c3e50')
                     ),
                     font=dict(size=13, family='Inter, system-ui, sans-serif'),
@@ -566,10 +568,10 @@ def _show_column_mapping():
                 
                 st.plotly_chart(fig_sankey, use_container_width=True)
             else:
-                st.warning(f"Sankey requires columns: {sankey_required_cols}. Available: {sankey_available_cols}")
+                st.warning(f"Sankey requiere columnas: {sankey_required_cols}. Disponibles: {sankey_available_cols}")
         
         st.markdown("---")
-        st.markdown("**📊 Detailed Results:**")
+        st.markdown("**📊 Resultados Detallados:**")
         
         # Add zebra pattern CSS
         st.markdown("""
@@ -604,7 +606,7 @@ def _show_column_mapping():
         excel_data = excel_buffer.getvalue()
         
         st.download_button(
-            label="📈 Download Results as Excel",
+            label="📈 Descargar Resultados como Excel",
             data=excel_data,
             file_name="batch_predictions.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -613,7 +615,7 @@ def _show_column_mapping():
     else:
         edited_data = st.data_editor(data, use_container_width=True, hide_index=True, num_rows="dynamic", key="data_editor")
     
-    if espesor_col != "-- Select --":
+    if espesor_col != "-- Seleccionar --":
         try:
             if 'results_df' in st.session_state and st.session_state.results_df is not None:
                 # Use results data if available - check if Espesor column exists
@@ -636,7 +638,7 @@ def _show_column_mapping():
             st.session_state.current_original_data = edited_data  # Store current data state
             
         except Exception as e:
-            st.error(f"❌ Selection error: {e}")
+            st.error(f"❌ Error de selección: {e}")
 
 
 def show_batch_prediction():
@@ -644,7 +646,7 @@ def show_batch_prediction():
     
     if 'final_data' in st.session_state and st.session_state.final_data is not None:
         st.markdown("---")
-        predict_button = st.button("🚀 Process Batch", type="primary", use_container_width=True)
+        predict_button = st.button("🚀 Procesar Lote", type="primary", use_container_width=True)
         _show_batch_results(st.session_state.final_data, predict_button)
 
 
@@ -654,7 +656,7 @@ def _show_data_input():
         
     if st.session_state.processing_step == 'initial_state':
         uploaded_file = st.file_uploader(
-            "📁 Upload File",
+            "📁 Subir Archivo",
             type=['csv', 'xlsx', 'xlsm']
         )
         if uploaded_file:

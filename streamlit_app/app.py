@@ -46,13 +46,13 @@ try:
     from components.batch_processor import show_batch_prediction
 except ImportError:
     def show_batch_prediction():
-        st.error("Batch processor not available")
+        st.error("Procesador por lotes no disponible")
 
 try:
     from components.single_predictor import show_single_prediction
 except ImportError:
     def show_single_prediction():
-        st.error("Single predictor not available")
+        st.error("Predictor individual no disponible")
 
 # Utils now imported within components as needed
 
@@ -92,13 +92,13 @@ def show_main_page():
     # Clean header without redundant subtitle
     st.markdown("""
     <div style='text-align: center; margin-bottom: 2rem;'>
-        <h1 style='color: #2c3e50; margin-bottom: 0.5rem;'>Machining Time Analysis</h1>
-        <p style='color: #6c757d; font-size: 1.1rem; margin: 0;'>AI-powered production time estimation</p>
+        <h1 style='color: #2c3e50; margin-bottom: 0.5rem;'>Análisis de Tiempo de Mecanizado</h1>
+        <p style='color: #6c757d; font-size: 1.1rem; margin: 0;'>Estimación de tiempo de producción con IA</p>
     </div>
     """, unsafe_allow_html=True)
     
     # Tabs with better visual distinction
-    tab1, tab2 = st.tabs(["Individual Analysis", "Batch Processing"])
+    tab1, tab2 = st.tabs(["Análisis Individual", "Procesamiento por Lotes"])
     
     # Add custom CSS for better tab styling
     st.markdown("""
@@ -159,8 +159,8 @@ def initialize_services():
             st.session_state.model_service = model_service
             st.session_state.model_type = model_type
         except Exception as e:
-            st.error(f"Model loading failed: {e}")
-            st.error("Please ensure models are available in models/ directory")
+            st.error(f"Error al cargar modelo: {e}")
+            st.error("Por favor asegúrate de que los modelos estén disponibles en el directorio models/")
 
 if __name__ == "__main__":
     main()
