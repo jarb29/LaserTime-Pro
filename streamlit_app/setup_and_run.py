@@ -33,15 +33,16 @@ from config.settings import MODELS_DIR
 # Constants
 REQUIRED_MODEL_FILES = ["machining_time_model.pkl", "feature_scaler.pkl"]
 FEATURE_COLUMNS = [
-    'Espesor', 'Longitude Corte (m)', 'Cutting_Length_Squared', 
+    'Espesor', 'Longitude Corte (m)', 'Cutting_Length_Squared',
     'Espesor_Squared', 'Length_Thickness_Interaction'
 ]
 DATA_FILE_PATH = "../data/processed/clean_data/clean_full_tiempo_final.xlsx"
 REQUIRED_DATA_COLUMNS = ['Espesor', 'Longitude Corte (m)', 'Tiempo']
 
+
 def check_models_exist() -> bool:
     """Check if required sklearn model files exist.
-    
+
     Returns:
         bool: True if all required files exist, False otherwise
     """
@@ -49,75 +50,77 @@ def check_models_exist() -> bool:
         print("❌ Models directory not found!")
         print("Please train the model first using train_model.py")
         return False
-    
+
     missing_files = [
-        file for file in REQUIRED_MODEL_FILES 
+        file for file in REQUIRED_MODEL_FILES
         if not (MODELS_DIR / file).exists()
     ]
-    
+
     if missing_files:
         print(f"❌ Missing model files: {missing_files}")
         return False
-    
+
     print("✅ Sklearn models found")
     return True
 
+
 def convert_models(force: bool = False) -> bool:
     """Convert sklearn models to ONNX format.
-    
+
     Args:
         force: Whether to force conversion even if ONNX files exist
-        
+
     Returns:
         bool: True if conversion successful, False otherwise
     """
     model_onnx_file = MODELS_DIR / "machining_time_model.onnx"
     scaler_onnx_file = MODELS_DIR / "feature_scaler.onnx"
-    
+
     if not force and model_onnx_file.exists() and scaler_onnx_file.exists():
         print("✅ ONNX models already exist (use --force-conversion to reconvert)")
         return True
-    
+
     try:
         from skl2onnx import convert_sklearn
         from skl2onnx.common.data_types import FloatTensorType
-        
+
         # Load sklearn components
         model = joblib.load(MODELS_DIR / "machining_time_model.pkl")
         scaler = joblib.load(MODELS_DIR / "feature_scaler.pkl")
-        
+
         # Define input type for 5 features
         initial_type = [('float_input', FloatTensorType([None, 5]))]
-        
+
         # Convert to ONNX
         onnx_model = convert_sklearn(model, initial_types=initial_type)
         onnx_scaler = convert_sklearn(scaler, initial_types=initial_type)
-        
+
         # Save ONNX models
         model_onnx_file.write_bytes(onnx_model.SerializeToString())
         scaler_onnx_file.write_bytes(onnx_scaler.SerializeToString())
-        
+
         print("✅ Models converted to ONNX successfully")
         return True
-            
+
     except Exception as e:
         print(f"❌ Error during conversion: {e}")
         print("Will use sklearn models as fallback")
         return False
 
+
 def validate_models() -> bool:
     """Validate that models can make predictions.
-    
+
     Returns:
         bool: True if validation successful, False otherwise
     """
     try:
         sys.path.append('..')
         from services.sklearn_model_service import SklearnModelService
-        
+
         service = SklearnModelService()
         result = service.predict_single(3.0, 10.5)
-        
+
         if result and 'predicted_time_minutes' in result:
             print("✅ Model validation passed")
             return True
@@ -127,6 +130,7 @@ def validate_models() -> bool:
     except Exception as e:
         print(f"⚠️ Validation error: {e}")
         return False
+
 
 def run_streamlit_app() -> None:
     """Launch the Streamlit application."""
@@ -139,34 +143,34 @@ def run_streamlit_app() -> None:
     except Exception as e:
         print(f"❌ Error starting app: {e}")
 
+
 def _prepare_training_data(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series]:
     """Prepare features and target from raw data.
-    
+
     Args:
         df: Raw dataframe with machining data
-        
+
     Returns:
         Tuple of (features, target)
     """
-    # Clean data
     df = df[REQUIRED_DATA_COLUMNS].copy().dropna()
     df = df[(df['Longitude Corte (m)'] > 0) & (df['Tiempo'] > 0)]
-    
-    # Create engineered features
+
     df['Cutting_Length_Squared'] = df['Longitude Corte (m)'] ** 2
     df['Espesor_Squared'] = df['Espesor'] ** 2
     df['Length_Thickness_Interaction'] = df['Longitude Corte (m)'] * df['Espesor']
-    
+
     return df[FEATURE_COLUMNS], df['Tiempo']
 
-def _train_and_select_best_model(X_train: np.ndarray, X_test: np.ndarray, 
+
+def _train_and_select_best_model(X_train: np.ndarray, X_test: np.ndarray,
                                  y_train: pd.Series, y_test: pd.Series) -> Tuple[object, float]:
     """Train models and select the best one.
-    
+
     Args:
         X_train, X_test: Training and test features
         y_train, y_test: Training and test targets
-        
+
     Returns:
         Tuple of (best_model, best_r2_score)
     """
@@ -174,63 +178,19 @@ def _train_and_select_best_model(X_train: np.ndarray, X_test: np.ndarray,
         'RandomForest': RandomForestRegressor(n_estimators=100, max_depth=10, random_state=42),
         'LinearRegression': LinearRegression()
     }
-    
+
     best_model, best_r2 = None, 0
-    
+
     for name, model in models.items():
         model.fit(X_train, y_train)
         predictions = model.predict(X_test)
         r2 = r2_score(y_test, predictions)
-        
+
         if r2 > best_r2:
             best_model, best_r2 = model, r2
-    
+
     return best_model, best_r2
 
-def retrain_model() -> bool:
-    """Retrain model with correct format to fix sklearn warnings.
-    
-    Returns:
-        bool: True if retraining successful, False otherwise
-    """
-    try:
-        print("🔄 Retraining model to fix sklearn warnings...")
-        
-        # Check data file exists
-        data_file = Path(DATA_FILE_PATH)
-        if not data_file.exists():
-            print(f"❌ Data file not found: {data_file}")
-            return False
-        
-        # Load and prepare data
-        df = pd.read_excel(data_file)
-        X, y = _prepare_training_data(df)
-        
-        # Split and scale with numpy arrays to avoid sklearn warnings
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-        scaler = StandardScaler()
-        X_train_scaled = scaler.fit_transform(X_train.values)
-        X_test_scaled = scaler.transform(X_test.values)
-        
-        # Train and select best model
-        best_model, best_r2 = _train_and_select_best_model(X_train_scaled, X_test_scaled, y_train, y_test)
-        
-        # Save model components
-        model_files = {
-            'machining_time_model.pkl': best_model,
-            'feature_scaler.pkl': scaler,
-            'feature_columns.pkl': FEATURE_COLUMNS
-        }
-        
-        for filename, obj in model_files.items():
-            joblib.dump(obj, MODELS_DIR / filename)
-        
-        print(f"✅ Model retrained successfully (R² = {best_r2:.4f})")
-        return True
-        
-    except Exception as e:
-        print(f"❌ Retraining failed: {e}")
-        return False
 
 def main() -> None:
     """Main entry point for the setup and run script."""
@@ -239,52 +199,51 @@ def main() -> None:
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument(
-        '--skip-conversion', 
+        '--skip-conversion',
         action='store_true',
         help='Skip ONNX conversion if models already exist'
     )
     parser.add_argument(
-        '--force-conversion', 
+        '--force-conversion',
         action='store_true',
         help='Force ONNX conversion even if models exist'
     )
     parser.add_argument(
-        '--validate-only', 
+        '--validate-only',
         action='store_true',
         help='Only validate models, do not run app'
     )
-    
+
     args = parser.parse_args()
-    
+
     print("🚀 Machining Time Analysis - Setup and Run")
     print("=" * 50)
-    
+
     # Step 1: Check sklearn models exist
     if not check_models_exist():
         print("\n📋 To get started:")
         print("1. Run train_model.py from the JKI root directory")
         print(f"2. Required files: {', '.join(REQUIRED_MODEL_FILES)} in {MODELS_DIR.relative_to(Path.cwd().parent)}/")
         return
-    
-    # Step 2: Retrain model to fix sklearn warnings
-    print("\n🔄 Ensuring model compatibility...")
-    retrain_model()
-    
+
+    # Step 2: (Removed retraining step)
+
     # Step 3: Convert models to ONNX
     if not args.skip_conversion:
         print("\n📦 Converting models to ONNX...")
         convert_models(force=True)  # Always force conversion for consistency
-    
+
     # Step 4: Validate models
     print("\n✅ Validating models...")
     validate_models()
-    
+
     # Step 5: Run app (unless validate-only)
     if not args.validate_only:
         print("\n🌟 Starting Streamlit app...")
         run_streamlit_app()
     else:
         print("\n✅ Validation complete!")
+
 
 if __name__ == "__main__":
     main()
